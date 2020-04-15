@@ -5,9 +5,9 @@ using AElf.Contracts.Consensus.AEDPoS;
 using Acs1;
 using AElf.Contracts.Parliament;
 
-namespace AElf.Contracts.LotteryDemoContract
+namespace AElf.Contracts.LotteryContract
 {
-    public class LotteryDemoContractState : ContractState
+    public class LotteryContractState : ContractState
     {
         // ReSharper disable once InconsistentNaming
         internal AEDPoSContractContainer.AEDPoSContractReferenceState AEDPoSContract { get; set; }

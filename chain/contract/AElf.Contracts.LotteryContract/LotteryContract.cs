@@ -7,9 +7,9 @@ using AElf.Sdk.CSharp;
 using AElf.Types;
 using Google.Protobuf.WellKnownTypes;
 
-namespace AElf.Contracts.LotteryDemoContract
+namespace AElf.Contracts.LotteryContract
 {
-    public partial class LotteryDemoContract : LotteryDemoContractContainer.LotteryDemoContractBase
+    public partial class LotteryContract : LotteryContractContainer.LotteryContractBase
     {
         public override Empty Initialize(InitializeInput input)
         {

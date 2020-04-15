@@ -24,7 +24,7 @@ namespace AElf.Boilerplate.Tester
             Hash preBlockHash)
         {
             var tx = await _transactionGeneratingService.GenerateTransactionAsync(
-                Hash.FromString("AElf.ContractNames.LotteryDemo"), "GetPrice", new Empty().ToByteString());
+                Hash.FromString("AElf.ContractNames.Lottery"), "GetPrice", new Empty().ToByteString());
             Logger.LogInformation($"Generated.{tx.GetHash()}");
             return new List<Transaction>
             {

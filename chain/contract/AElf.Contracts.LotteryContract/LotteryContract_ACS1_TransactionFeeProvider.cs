@@ -5,9 +5,9 @@ using AElf.Sdk.CSharp;
 using AElf.Types;
 using Google.Protobuf.WellKnownTypes;
 
-namespace AElf.Contracts.LotteryDemoContract
+namespace AElf.Contracts.LotteryContract
 {
-    public partial class LotteryDemoContract
+    public partial class LotteryContract
     {
         #region Views
 

@@ -6,22 +6,25 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\AElf.Boilerplate.Mainchain\AElf.Boilerplate.Mainchain.csproj"/>
+        <ProjectReference Include="..\..\contract\AElf.Contracts.LotteryContract\AElf.Contracts.LotteryContract.csproj">
+          <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
+        </ProjectReference>
+        <ProjectReference Include="..\AElf.Boilerplate.Mainchain\AElf.Boilerplate.Mainchain.csproj" />
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="AElf.Runtime.CSharp.ExecutiveTokenPlugin" Version="1.0.0-preview1"/>
-        <PackageReference Include="AElf.Runtime.CSharp" Version="1.0.0-preview1"/>
-        <PackageReference Include="AElf.RuntimeSetup" Version="1.0.0-preview1"/>
+        <PackageReference Include="AElf.Runtime.CSharp.ExecutiveTokenPlugin" Version="1.0.0-preview1" />
+        <PackageReference Include="AElf.Runtime.CSharp" Version="1.0.0-preview1" />
+        <PackageReference Include="AElf.RuntimeSetup" Version="1.0.0-preview1" />
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Volo.Abp.AspNetCore.Mvc" Version="1.1.2"/>
-        <PackageReference Include="Volo.Abp.Autofac" Version="1.1.2"/>
+        <PackageReference Include="Volo.Abp.AspNetCore.Mvc" Version="1.1.2" />
+        <PackageReference Include="Volo.Abp.Autofac" Version="1.1.2" />
     </ItemGroup>
 
     <ItemGroup>
-        <FrameworkReference Include="Microsoft.AspNetCore.App"/>
+        <FrameworkReference Include="Microsoft.AspNetCore.App" />
     </ItemGroup>
 
     <ItemGroup>
@@ -40,22 +43,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\contract\AElf.Contracts.BingoGameContract\AElf.Contracts.BingoGameContract.csproj">
-            <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-            <OutputItemType>Contract</OutputItemType>
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </ProjectReference>
-        <ProjectReference Include="..\..\contract\AElf.Contracts.HelloWorldContract\AElf.Contracts.HelloWorldContract.csproj">
-            <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-            <OutputItemType>Contract</OutputItemType>
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </ProjectReference>
-        <ProjectReference Include="..\..\contract\AElf.Contracts.LotteryDemoContract\AElf.Contracts.LotteryDemoContract.csproj">
-            <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-            <OutputItemType>Contract</OutputItemType>
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </ProjectReference>
-        <ProjectReference Include="..\..\contract\AElf.Contracts.GreeterContract\AElf.Contracts.GreeterContract.csproj">
+        <ProjectReference Include="..\..\contract\AElf.Contracts.LotteryContract\AElf.Contracts.LotteryContract.csproj">
             <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
             <OutputItemType>Contract</OutputItemType>
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -108,9 +96,8 @@
 
     <Target Name="CopyPackages" AfterTargets="AfterBuild">
         <ItemGroup>
-            <PackageReferenceFiles Condition="%(PackageReference.CopyToOutputDirectory) != 'PreserveNewest' And %(PackageReference.CopyToOutputDirectory) != ''"
-                                   Include="$(NugetPackageRoot)%(PackageReference.PackageName)\%(PackageReference.Version)\%(PackageReference.CopyToOutputDirectory)"/>
+            <PackageReferenceFiles Condition="%(PackageReference.CopyToOutputDirectory) != 'PreserveNewest' And %(PackageReference.CopyToOutputDirectory) != ''" Include="$(NugetPackageRoot)%(PackageReference.PackageName)\%(PackageReference.Version)\%(PackageReference.CopyToOutputDirectory)" />
         </ItemGroup>
-        <Copy SourceFiles="@(PackageReferenceFiles)" DestinationFolder="$(OutDir)"/>
+        <Copy SourceFiles="@(PackageReferenceFiles)" DestinationFolder="$(OutDir)" />
     </Target>
 </Project>

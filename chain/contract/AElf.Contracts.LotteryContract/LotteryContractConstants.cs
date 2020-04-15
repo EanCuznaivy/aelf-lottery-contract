@@ -1,6 +1,6 @@
-namespace AElf.Contracts.LotteryDemoContract
+namespace AElf.Contracts.LotteryContract
 {
-    public partial class LotteryDemoContract
+    public partial class LotteryContract
     {
         private const long DefaultPrice = 1;
         private const long DefaultDrawingLag = 80;

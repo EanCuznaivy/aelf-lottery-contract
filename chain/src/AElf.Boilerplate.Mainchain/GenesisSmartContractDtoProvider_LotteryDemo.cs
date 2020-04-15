@@ -1,38 +1,38 @@
 using System.Collections.Generic;
 using System.Linq;
 using Acs0;
-using AElf.Contracts.LotteryDemoContract;
+using AElf.Contracts.LotteryContract;
 using AElf.OS.Node.Application;
 using AElf.Types;
-using InitializeInput = AElf.Contracts.LotteryDemoContract.InitializeInput;
+using InitializeInput = AElf.Contracts.LotteryContract.InitializeInput;
 
 namespace AElf.Blockchains.MainChain
 {
     public partial class GenesisSmartContractDtoProvider
     {
-        public IEnumerable<GenesisSmartContractDto> GetGenesisSmartContractDtosForLotteryDemo()
+        public IEnumerable<GenesisSmartContractDto> GetGenesisSmartContractDtosForLottery()
         {
             var l = new List<GenesisSmartContractDto>();
 
             l.AddGenesisSmartContract(
-                _codes.Single(kv => kv.Key.Contains("LotteryDemo")).Value,
-                Hash.FromString("AElf.ContractNames.LotteryDemo"), GenerateLotteryDemoInitializationCallList());
+                _codes.Single(kv => kv.Key.Contains("Lottery")).Value,
+                Hash.FromString("AElf.ContractNames.Lottery"), GenerateLotteryInitializationCallList());
 
             return l;
         }
 
         private SystemContractDeploymentInput.Types.SystemTransactionMethodCallList
-            GenerateLotteryDemoInitializationCallList()
+            GenerateLotteryInitializationCallList()
         {
-            var lotteryDemoContractMethodCallList =
+            var LotteryContractMethodCallList =
                 new SystemContractDeploymentInput.Types.SystemTransactionMethodCallList();
-            lotteryDemoContractMethodCallList.Add(
-                nameof(LotteryDemoContractContainer.LotteryDemoContractStub.Initialize),
+            LotteryContractMethodCallList.Add(
+                nameof(LotteryContractContainer.LotteryContractStub.Initialize),
                 new InitializeInput
                 {
                     TokenSymbol = _economicOptions.TokenName
                 });
-            return lotteryDemoContractMethodCallList;
+            return LotteryContractMethodCallList;
         }
     }
 }
