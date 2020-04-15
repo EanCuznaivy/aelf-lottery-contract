@@ -234,16 +234,15 @@ namespace AElf.Contracts.LotteryContract
             Assert(rewardIdIndices.Count == rewardCount, "Incorrect reward count.");
             var rewardIds = rewardIdIndices.Select(i => i.Add(startId)).ToList();
 
-            for (var i = 0; i < rewardCount; i++)
+            var rewardIndex = 0;
+            for (var rewardRank = 1; rewardRank <= levelsCount.Count; rewardRank++)
             {
-                for (var rewardRank = 1; rewardRank <= levelsCount.Count; rewardRank++)
+                var rewardAmount = levelsCount[rewardRank.Sub(1)];
+                for (var k = 0; k < rewardAmount; k++)
                 {
-                    var rewardAmount = levelsCount[rewardRank.Sub(1)];
-                    for (var k = 0; k < rewardAmount; k++)
-                    {
-                        var rewardId = rewardIds[i];
-                        State.Lotteries[rewardId].Level = rewardRank;
-                    }
+                    var rewardId = rewardIds[rewardIndex];
+                    State.Lotteries[rewardId].Level = rewardRank;
+                    rewardIndex++;
                 }
             }
 
