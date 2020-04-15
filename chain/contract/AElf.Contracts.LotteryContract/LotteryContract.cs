@@ -221,16 +221,19 @@ namespace AElf.Contracts.LotteryContract
             Assert(poolCount >= rewardCount, "奖品过多");
 
             var rewardIdIndices = new List<long>();
+            var luckyIndex = Math.Abs(randomHash.ToInt64() % poolCount);
             for (var i = 0; i < rewardCount; i++)
             {
-                var luckyIndex = Math.Abs(randomHash.ToInt64() % poolCount);
-                while (!rewardIdIndices.Contains(luckyIndex))
+                while (rewardIdIndices.Contains(luckyIndex))
                 {
-                    rewardIdIndices.Add(rewardCount);
+                    // Keep update luckyIndex
                     randomHash = Hash.FromMessage(randomHash);
+                    luckyIndex = Math.Abs(randomHash.ToInt64() % poolCount);
                 }
+
+                rewardIdIndices.Add(luckyIndex);
             }
-            
+
             Assert(rewardIdIndices.Count == rewardCount, "Incorrect reward count.");
             var rewardIds = rewardIdIndices.Select(i => i.Add(startId)).ToList();
 
@@ -238,7 +241,7 @@ namespace AElf.Contracts.LotteryContract
             for (var rewardRank = 1; rewardRank <= levelsCount.Count; rewardRank++)
             {
                 var rewardAmount = levelsCount[rewardRank.Sub(1)];
-                for (var k = 0; k < rewardAmount; k++)
+                for (var i = 0; i < rewardAmount; i++)
                 {
                     var rewardId = rewardIds[rewardIndex];
                     State.Lotteries[rewardId].Level = rewardRank;
