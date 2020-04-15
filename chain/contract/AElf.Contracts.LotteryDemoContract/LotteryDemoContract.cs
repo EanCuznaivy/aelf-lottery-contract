@@ -216,54 +216,35 @@ namespace AElf.Contracts.LotteryDemoContract
             var poolCount = endId.Sub(startId).Add(1);
             Assert(poolCount > 0, "没人买不能开奖");
 
-            Assert(levelsCount.Sum() > 0, "奖品不能为空");
-            Assert(poolCount >= levelsCount.Sum(), "奖品过多");
+            var rewardCount = levelsCount.Sum();
+            Assert(rewardCount > 0, "奖品不能为空");
+            Assert(poolCount >= rewardCount, "奖品过多");
 
-            // category为奖品编号
-            // 比如LevelsCount = [2,0,3,6,0]，category从1到5
-            // 1号奖品的奖品数为2，2号奖品的奖品数为0，3号奖品的奖品书为3，……
-            long category = 1;
-            var rewardIds = new List<long>();
-            var alreadyReward = new List<long>();
-            foreach (var count in levelsCount)
+            var rewardIdIndices = new List<long>();
+            for (var i = 0; i < rewardCount; i++)
             {
-                var i = count;
-                while (i > 0)
+                var luckyIndex = Math.Abs(randomHash.ToInt64() % poolCount);
+                while (!rewardIdIndices.Contains(luckyIndex))
                 {
-                    var luckyIndex = Math.Abs(randomHash.ToInt64() % poolCount);
-                    var luckyId = startId.Add(luckyIndex);
-                    if (!alreadyReward.Contains(luckyId))
-                    {
-                        State.Lotteries[luckyId].Level = category;
-                        rewardIds.Add(luckyId);
-                    }
-                    else
-                    {
-                        // 如果已经得过奖，往后顺延
-                        var newLuckyId = startId;
-                        do
-                        {
-                            newLuckyId = newLuckyId.Add(1);
-                        } while (!alreadyReward.Contains(newLuckyId));
-
-                        if (newLuckyId > endId)
-                        {
-                            newLuckyId = newLuckyId.Sub(poolCount);
-                        }
-
-                        State.Lotteries[newLuckyId].Level = category;
-                        rewardIds.Add(newLuckyId);
-                        alreadyReward.Add(newLuckyId);
-                    }
-
-                    alreadyReward.Add(luckyId);
-
-                    // 不断对自己做Hash运算以产生新随机数
+                    rewardIdIndices.Add(rewardCount);
                     randomHash = Hash.FromMessage(randomHash);
-                    i--;
                 }
+            }
+            
+            Assert(rewardIdIndices.Count == rewardCount, "Incorrect reward count.");
+            var rewardIds = rewardIdIndices.Select(i => i.Add(startId)).ToList();
 
-                category++;
+            for (var i = 0; i < rewardCount; i++)
+            {
+                for (var rewardRank = 1; rewardRank <= levelsCount.Count; rewardRank++)
+                {
+                    var rewardAmount = levelsCount[rewardRank.Sub(1)];
+                    for (var k = 0; k < rewardAmount; k++)
+                    {
+                        var rewardId = rewardIds[i];
+                        State.Lotteries[rewardId].Level = rewardRank;
+                    }
+                }
             }
 
             period.RewardIds.Add(rewardIds);
