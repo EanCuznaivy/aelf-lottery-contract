@@ -1,23 +1,76 @@
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using AElf.Contracts.Deployer;
+using AElf.Boilerplate.ContractDeployer;
+using AElf.CrossChain;
+using AElf.EconomicSystem;
+using AElf.GovernmentSystem;
+using AElf.Kernel;
+using AElf.Kernel.Consensus;
+using AElf.Kernel.Proposal;
+using AElf.Kernel.Token;
+using AElf.Types;
 
 namespace AElf.Boilerplate.MainChain
 {
     public class SystemContractProvider : ISystemContractProvider
     {
-        public IEnumerable<string> GetSystemContractDllPaths()
+        public Dictionary<Hash, string> GetSystemContractInfo()
         {
-            return new List<Type>
+            return new Dictionary<Hash, string>
             {
-                typeof(Contracts.Profit.ProfitContract),
-                typeof(Contracts.Vote.VoteContract),
-                typeof(Contracts.Election.ElectionContract),
-                typeof(Contracts.Consensus.AEDPoS.AEDPoSContract),
-                typeof(Contracts.MultiToken.TokenContract),
-                typeof(Contracts.Configuration.ConfigurationContract)
-            }.Select(t => t.Assembly.Location).ToList();
+                {
+                    ProfitSmartContractAddressNameProvider.Name,
+                    typeof(Contracts.Profit.ProfitContract).Assembly.Location
+                },
+                {VoteSmartContractAddressNameProvider.Name, typeof(Contracts.Vote.VoteContract).Assembly.Location},
+                {
+                    ElectionSmartContractAddressNameProvider.Name,
+                    typeof(Contracts.Election.ElectionContract).Assembly.Location
+                },
+                {
+                    ConsensusSmartContractAddressNameProvider.Name,
+                    typeof(Contracts.Consensus.AEDPoS.AEDPoSContract).Assembly.Location
+                },
+                {
+                    TokenSmartContractAddressNameProvider.Name,
+                    typeof(Contracts.MultiToken.TokenContract).Assembly.Location
+                },
+                {
+                    ConfigurationSmartContractAddressNameProvider.Name,
+                    typeof(Contracts.Configuration.ConfigurationContract).Assembly.Location
+                },
+                {
+                    TreasurySmartContractAddressNameProvider.Name,
+                    typeof(Contracts.Treasury.TreasuryContract).Assembly.Location
+                },
+                {
+                    ParliamentSmartContractAddressNameProvider.Name,
+                    typeof(Contracts.Parliament.ParliamentContract).Assembly.Location
+                },
+                {
+                    AssociationSmartContractAddressNameProvider.Name,
+                    typeof(Contracts.Association.AssociationContract).Assembly.Location
+                },
+                {
+                    ReferendumSmartContractAddressNameProvider.Name,
+                    typeof(Contracts.Referendum.ReferendumContract).Assembly.Location
+                },
+                {
+                    EconomicSmartContractAddressNameProvider.Name,
+                    typeof(Contracts.Economic.EconomicContract).Assembly.Location
+                },
+                {
+                    TokenHolderSmartContractAddressNameProvider.Name,
+                    typeof(Contracts.TokenHolder.TokenHolderContract).Assembly.Location
+                },
+                {
+                    TokenConverterSmartContractAddressNameProvider.Name,
+                    typeof(Contracts.TokenConverter.TokenConverterContract).Assembly.Location
+                },
+                {
+                    CrossChainSmartContractAddressNameProvider.Name,
+                    typeof(Contracts.CrossChain.CrossChainContract).Assembly.Location
+                }
+            };
         }
     }
 }

@@ -88,7 +88,7 @@ namespace AElf.Contracts.LotteryContract
                         Category = KernelConstants.DefaultRunnerCategory,
                         Code =
                             ByteString.CopyFrom(File.ReadAllBytes(typeof(LotteryContract).Assembly.Location)),
-                        Name = Hash.FromString("AElf.ContractNames.LotteryContract"),
+                        Name = HashHelper.ComputeFrom("AElf.ContractNames.LotteryContract"),
                         TransactionMethodCallList =
                             new SystemContractDeploymentInput.Types.SystemTransactionMethodCallList()
                     })).Output;

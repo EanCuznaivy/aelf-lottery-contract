@@ -227,7 +227,7 @@ namespace AElf.Contracts.LotteryContract
                 while (rewardIdIndices.Contains(luckyIndex))
                 {
                     // Keep update luckyIndex
-                    randomHash = Hash.FromMessage(randomHash);
+                    randomHash = HashHelper.ComputeFrom(randomHash);
                     luckyIndex = Math.Abs(randomHash.ToInt64() % poolCount);
                 }
 
