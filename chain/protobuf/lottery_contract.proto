@@ -57,6 +57,9 @@ service LotteryContract {
 	rpc GetCurrentPeriod (google.protobuf.Empty) returns (PeriodBody) {
         option (aelf.is_view) = true;
     }
+	rpc GetLottery (google.protobuf.Int64Value) returns (Lottery) {
+        option (aelf.is_view) = true;
+    }
 }
 
 message InitializeInput {
@@ -78,7 +81,7 @@ message TakeRewardInput {
 }
 
 message DrawInput {
-    repeated int64 levels_count = 1;
+    repeated int32 levels_count = 1;
 }
 
 message Lottery {

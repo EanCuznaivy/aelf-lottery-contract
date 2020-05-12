@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using AElf.Contracts.MultiToken;
@@ -95,13 +94,16 @@ namespace AElf.Contracts.LotteryContract
         {
             Assert(Context.Sender == State.Admin.Value, "No permission to prepare!");
 
-            // 检查没有未开的奖
-            Assert(State.Periods[State.CurrentPeriod.Value].RandomHash == Hash.Empty,
-                $"当前的第{State.CurrentPeriod.Value}期还没开奖");
+            // Check whether current period drew except period 1.
+            if (State.CurrentPeriod.Value != 1)
+            {
+                Assert(State.Periods[State.CurrentPeriod.Value.Sub(1)].RandomHash != Hash.Empty,
+                    $"Period {State.CurrentPeriod.Value} hasn't drew.");
+            }
 
             var currentPeriod = State.Periods[State.CurrentPeriod.Value];
             Assert(currentPeriod.StartId < State.SelfIncreasingIdForLottery.Value,
-                "本期还未售出，不能结束");
+                "Unable to terminate this period because no one bought.");
 
             State.CurrentPeriod.Value = State.CurrentPeriod.Value.Add(1);
 
@@ -128,7 +130,7 @@ namespace AElf.Contracts.LotteryContract
                 Value = expectedBlockNumber
             });
 
-            // 根据随机数处理彩票
+            // Deal with lotteries base on the random hash.
             DealWithLotteries(input.LevelsCount.ToList(), randomHash);
 
             return new Empty();
@@ -150,109 +152,6 @@ namespace AElf.Contracts.LotteryContract
             return new Empty();
         }
 
-        public override GetRewardResultOutput GetRewardResult(Int64Value input)
-        {
-            var period = State.Periods[input.Value];
-            var rewardIds = period?.RewardIds;
-            if (rewardIds == null || !rewardIds.Any())
-            {
-                return new GetRewardResultOutput();
-            }
-
-            // ReSharper disable once PossibleNullReferenceException
-            var randomHash = period.RandomHash;
-            // ReSharper disable once AssignNullToNotNullAttribute
-            var lotteries = rewardIds.Select(id => State.Lotteries[id] ?? new Lottery()).ToList();
-
-            return new GetRewardResultOutput
-            {
-                Period = input.Value,
-                RandomHash = randomHash,
-                RewardLotteries = {lotteries}
-            };
-        }
-
-        public override GetBoughtLotteriesOutput GetBoughtLotteries(GetBoughtLotteriesInput input)
-        {
-            List<long> returnLotteryIds;
-            var owner = input.Owner ?? Context.Sender;
-            var lotteryList = State.OwnerToLotteries[owner][input.Period];
-            if (lotteryList == null)
-            {
-                return new GetBoughtLotteriesOutput();
-            }
-
-            var allLotteryIds = lotteryList.Ids.ToList();
-            if (allLotteryIds.Count <= MaximumReturnAmount)
-            {
-                returnLotteryIds = allLotteryIds;
-            }
-            else
-            {
-                Assert(input.StartIndex < allLotteryIds.Count, "Invalid start index.");
-                var takeAmount = Math.Min(allLotteryIds.Count.Sub(input.StartIndex), MaximumReturnAmount);
-                returnLotteryIds = allLotteryIds.Skip(input.StartIndex).Take((int) takeAmount).ToList();
-            }
-
-            return new GetBoughtLotteriesOutput
-            {
-                Lotteries =
-                {
-                    returnLotteryIds.Select(id => State.Lotteries[id] ?? new Lottery())
-                }
-            };
-        }
-
-        private void DealWithLotteries(List<long> levelsCount, Hash randomHash)
-        {
-            var currentPeriodNumber = State.CurrentPeriod.Value;
-            var lastPeriodNumber = currentPeriodNumber.Sub(1);
-            var startId = State.Periods[lastPeriodNumber].StartId;
-            var endId = State.Periods[currentPeriodNumber].StartId.Sub(1);
-
-            var period = State.Periods[lastPeriodNumber];
-            period.RandomHash = randomHash;
-
-            var poolCount = endId.Sub(startId).Add(1);
-            Assert(poolCount > 0, "没人买不能开奖");
-
-            var rewardCount = levelsCount.Sum();
-            Assert(rewardCount > 0, "奖品不能为空");
-            Assert(poolCount >= rewardCount, "奖品过多");
-
-            var rewardIdIndices = new List<long>();
-            var luckyIndex = Math.Abs(randomHash.ToInt64() % poolCount);
-            for (var i = 0; i < rewardCount; i++)
-            {
-                while (rewardIdIndices.Contains(luckyIndex))
-                {
-                    // Keep update luckyIndex
-                    randomHash = HashHelper.ComputeFrom(randomHash);
-                    luckyIndex = Math.Abs(randomHash.ToInt64() % poolCount);
-                }
-
-                rewardIdIndices.Add(luckyIndex);
-            }
-
-            Assert(rewardIdIndices.Count == rewardCount, "Incorrect reward count.");
-            var rewardIds = rewardIdIndices.Select(i => i.Add(startId)).ToList();
-
-            var rewardIndex = 0;
-            for (var rewardRank = 1; rewardRank <= levelsCount.Count; rewardRank++)
-            {
-                var rewardAmount = levelsCount[rewardRank.Sub(1)];
-                for (var i = 0; i < rewardAmount; i++)
-                {
-                    var rewardId = rewardIds[rewardIndex];
-                    State.Lotteries[rewardId].Level = rewardRank;
-                    rewardIndex++;
-                }
-            }
-
-            period.RewardIds.Add(rewardIds);
-            State.Periods[lastPeriodNumber] = period;
-        }
-
         public override Empty ResetPrice(Int64Value input)
         {
             AssertSenderIsAdmin();
@@ -272,64 +171,6 @@ namespace AElf.Contracts.LotteryContract
             AssertSenderIsAdmin();
             State.MaximumAmount.Value = input.Value;
             return new Empty();
-        }
-
-        private void AssertSenderIsAdmin()
-        {
-            Assert(Context.Sender == State.Admin.Value, "Sender should be admin.");
-        }
-
-        public override Int64Value GetSales(Int64Value input)
-        {
-            var period = State.Periods[input.Value];
-            Assert(period != null, "Period information not found.");
-            if (State.CurrentPeriod.Value == input.Value)
-            {
-                return new Int64Value
-                {
-                    // ReSharper disable once PossibleNullReferenceException
-                    Value = State.SelfIncreasingIdForLottery.Value.Sub(period.StartId)
-                };
-            }
-
-            var nextPeriod = State.Periods[input.Value.Add(1)];
-            return new Int64Value
-            {
-                // ReSharper disable once PossibleNullReferenceException
-                Value = nextPeriod.StartId.Sub(period.StartId)
-            };
-        }
-
-        public override Int64Value GetPrice(Empty input)
-        {
-            return new Int64Value {Value = State.Price.Value};
-        }
-
-        public override Int64Value GetDrawingLag(Empty input)
-        {
-            return new Int64Value {Value = State.DrawingLag.Value};
-        }
-
-        public override Int64Value GetMaximumBuyAmount(Empty input)
-        {
-            return new Int64Value {Value = State.MaximumAmount.Value};
-        }
-
-        public override Int64Value GetCurrentPeriodNumber(Empty input)
-        {
-            return new Int64Value {Value = State.CurrentPeriod.Value};
-        }
-
-        public override PeriodBody GetPeriod(Int64Value input)
-        {
-            var period = State.Periods[input.Value];
-            return period ?? new PeriodBody();
-        }
-
-        public override PeriodBody GetCurrentPeriod(Empty input)
-        {
-            var period = State.Periods[State.CurrentPeriod.Value];
-            return period ?? new PeriodBody();
         }
     }
 }
