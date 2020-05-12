@@ -1,26 +1,35 @@
-using AElf.Contracts.TestKit;
-using AElf.Kernel.SmartContract;
-using AElf.Kernel.SmartContract.Infrastructure;
-using AElf.Runtime.CSharp;
+using System.Collections.Generic;
+using System.IO;
+using AElf.Boilerplate.TestBase;
+using AElf.ContractTestBase;
+using AElf.Kernel.SmartContractInitialization;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
+using Volo.Abp;
 using Volo.Abp.Modularity;
 
 namespace AElf.Contracts.LotteryContract
 {
-    [DependsOn(typeof(ContractTestModule))]
+    [DependsOn(typeof(MainChainDAppContractTestModule))]
     // ReSharper disable once InconsistentNaming
-    public class LotteryContractTestModule : ContractTestModule
+    public class LotteryContractTestModule : MainChainDAppContractTestModule
     {
         public override void ConfigureServices(ServiceConfigurationContext context)
         {
-            Configure<ContractOptions>(o => o.ContractDeploymentAuthorityRequired = false);
-            context.Services.AddSingleton<ISmartContractRunner, UnitTestCSharpSmartContractRunner>(provider =>
+            context.Services.AddSingleton<IContractInitializationProvider, LotteryContractInitializationProvider>();
+        }
+
+        public override void OnPreApplicationInitialization(ApplicationInitializationContext context)
+        {
+            var contractCodeProvider = context.ServiceProvider.GetService<IContractCodeProvider>();
+            var contractDllLocation = typeof(LotteryContract).Assembly.Location;
+            var contractCodes = new Dictionary<string, byte[]>(contractCodeProvider.Codes)
             {
-                var option = provider.GetService<IOptions<RunnerOptions>>();
-                return new UnitTestCSharpSmartContractRunner(
-                    option.Value.SdkDir);
-            });
+                {
+                    new LotteryContractInitializationProvider().ContractCodeName,
+                    File.ReadAllBytes(contractDllLocation)
+                }
+            };
+            contractCodeProvider.Codes = contractCodes;
         }
     }
 }

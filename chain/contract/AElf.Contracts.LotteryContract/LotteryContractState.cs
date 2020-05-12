@@ -1,9 +1,8 @@
 using AElf.Contracts.MultiToken;
 using AElf.Sdk.CSharp.State;
 using AElf.Types;
-using AElf.Contracts.Consensus.AEDPoS;
 using Acs1;
-using AElf.Contracts.Parliament;
+using AElf.Contracts.Consensus.AEDPoS;
 
 namespace AElf.Contracts.LotteryContract
 {
@@ -11,7 +10,6 @@ namespace AElf.Contracts.LotteryContract
     {
         // ReSharper disable once InconsistentNaming
         internal AEDPoSContractContainer.AEDPoSContractReferenceState AEDPoSContract { get; set; }
-        internal ParliamentContractContainer.ParliamentContractReferenceState ParliamentContract { get; set; }
         internal TokenContractImplContainer.TokenContractImplReferenceState TokenContract { get; set; }
 
         /// <summary>
@@ -63,8 +61,5 @@ namespace AElf.Contracts.LotteryContract
         /// 用户地址 -> 届数 -> 已购彩票列表
         /// </summary>
         public MappedState<Address, long, LotteryList> OwnerToLotteries { get; set; }
-
-        public MappedState<string, MethodFees> TransactionFees { get; set; }
-        public SingletonState<AuthorityInfo> MethodFeeController { get; set; }
     }
 }

@@ -35,6 +35,13 @@ namespace AElf.Contracts.LotteryContract
         {
             await InitialDAOContract();
 
+            await TokenContractStub.Transfer.SendAsync(new TransferInput
+            {
+                To = AliceAddress,
+                Symbol = "ELF",
+                Amount = Price * 100
+            });
+
             await AliceTokenContractStub.Approve.SendAsync(new ApproveInput
             {
                 Spender = LotteryContractAddress,
