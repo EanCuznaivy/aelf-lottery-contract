@@ -134,7 +134,6 @@ namespace AElf.Contracts.LotteryContract
 
         public override Empty TakeReward(TakeRewardInput input)
         {
-            Assert(State.OwnerToLotteries[Context.Sender][input.Period] != null, $"宁没有买过第{input.Period}期的彩票 :)");
             Assert(State.OwnerToLotteries[Context.Sender][input.Period].Ids.Contains(input.LotteryId),
                 "只能领取宁亲自买的彩票 :)");
             Assert(State.Lotteries[input.LotteryId].Level != 0, "宁没有中奖嗷 :(");
