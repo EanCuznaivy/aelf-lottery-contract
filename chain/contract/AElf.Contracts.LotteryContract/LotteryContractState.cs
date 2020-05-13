@@ -1,3 +1,4 @@
+using System;
 using AElf.Contracts.MultiToken;
 using AElf.Sdk.CSharp.State;
 using AElf.Types;
@@ -61,5 +62,7 @@ namespace AElf.Contracts.LotteryContract
         /// 用户地址 -> 届数 -> 已购彩票列表
         /// </summary>
         public MappedState<Address, long, LotteryList> OwnerToLotteries { get; set; }
+
+        public SingletonState<long> RewardCount { get; set; }
     }
 }

@@ -25,11 +25,14 @@ namespace AElf.Contracts.LotteryContract
                 // Only can happen in test cases.
                 randomHash = HashHelper.ComputeFrom(Context.PreviousBlockHash);
             }
+
             period.RandomHash = randomHash;
 
             var rewardCount = levelsCount.Sum();
+            State.RewardCount.Value = State.RewardCount.Value.Add(rewardCount);
             Assert(rewardCount > 0, "Reward pool cannot be empty.");
-            Assert(poolCount >= rewardCount, $"Too many rewards, we just sells {poolCount} lotteries.");
+            Assert(poolCount >= State.RewardCount.Value,
+                $"Too many rewards, lottery pool size: {poolCount.Sub(State.RewardCount.Value)}.");
 
             var ranks = new List<int>();
 

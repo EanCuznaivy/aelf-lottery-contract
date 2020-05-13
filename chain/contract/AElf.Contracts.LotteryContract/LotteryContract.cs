@@ -101,10 +101,6 @@ namespace AElf.Contracts.LotteryContract
                     $"Period {State.CurrentPeriod.Value} hasn't drew.");
             }
 
-            var currentPeriod = State.Periods[State.CurrentPeriod.Value];
-            Assert(currentPeriod.StartId < State.SelfIncreasingIdForLottery.Value,
-                "Unable to terminate this period because no one bought.");
-
             State.CurrentPeriod.Value = State.CurrentPeriod.Value.Add(1);
 
             // 初始化下一届基本信息
