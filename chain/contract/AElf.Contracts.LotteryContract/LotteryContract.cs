@@ -101,6 +101,8 @@ namespace AElf.Contracts.LotteryContract
                     $"Period {State.CurrentPeriod.Value} hasn't drew.");
             }
 
+            Assert(State.SelfIncreasingIdForLottery.Value > State.RewardCount.Value, "目前所有已售出彩票都中奖了");
+
             State.CurrentPeriod.Value = State.CurrentPeriod.Value.Add(1);
 
             // 初始化下一届基本信息
