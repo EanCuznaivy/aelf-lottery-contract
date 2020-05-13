@@ -49,7 +49,7 @@ namespace AElf.Contracts.LotteryContract
                     if (list != null)
                     {
                         // TODO: Optimize this if current period number is big enough.
-                        lotteryList.Ids.Add(list.Ids.Where(i => i >= input.StartIndex));
+                        lotteryList.Ids.Add(list.Ids.Where(i => i > input.StartId));
                     }
                 }
             }
@@ -69,9 +69,9 @@ namespace AElf.Contracts.LotteryContract
             }
             else
             {
-                Assert(input.StartIndex < allLotteryIds.Count, "Invalid start index.");
-                var takeAmount = Math.Min(allLotteryIds.Count.Sub(input.StartIndex), MaximumReturnAmount);
-                returnLotteryIds = allLotteryIds.Skip(input.StartIndex).Take((int) takeAmount).ToList();
+                Assert(input.StartId < allLotteryIds.Last(), "Start id is too big.");
+                var takeAmount = Math.Min(allLotteryIds.Count(i => i > input.StartId), MaximumReturnAmount);
+                returnLotteryIds = allLotteryIds.Where(i => i > input.StartId).Take(takeAmount).ToList();
             }
 
             return new GetBoughtLotteriesOutput

@@ -118,8 +118,10 @@ namespace AElf.Contracts.LotteryContract
 
         public override Empty Draw(DrawInput input)
         {
+            var currentPeriod = State.CurrentPeriod.Value;
+            Assert(currentPeriod > 1, "Not ready to draw.");
             Assert(Context.Sender == State.Admin.Value, "No permission to draw!");
-            Assert(State.Periods[State.CurrentPeriod.Value].RandomHash == Hash.Empty, "Latest period already drawn.");
+            Assert(State.Periods[currentPeriod.Sub(1)].RandomHash == Hash.Empty, "Latest period already drawn.");
             var expectedBlockNumber = State.Periods[State.CurrentPeriod.Value].BlockNumber;
             Assert(Context.CurrentHeight >= expectedBlockNumber, "Block height not enough.");
 
