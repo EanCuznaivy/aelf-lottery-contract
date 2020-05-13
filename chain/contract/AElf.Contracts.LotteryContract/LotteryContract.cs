@@ -139,7 +139,7 @@ namespace AElf.Contracts.LotteryContract
             {
                 throw new AssertionException("Lottery id not found.");
             }
-            Assert(lottery.Owner != Context.Sender,  "只能领取宁亲自买的彩票 :)");
+            Assert(lottery.Owner == Context.Sender,  "只能领取宁亲自买的彩票 :)");
             Assert(lottery.Level != 0, "宁没有中奖嗷 :(");
             Assert(string.IsNullOrEmpty(lottery.RegistrationInformation),
                 $"宁已经领取过啦！登记信息：{State.Lotteries[input.LotteryId].RegistrationInformation}");

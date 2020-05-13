@@ -137,7 +137,6 @@ namespace AElf.Contracts.LotteryContract
             await AliceLotteryContractStub.TakeReward.SendAsync(new TakeRewardInput
             {
                 LotteryId = reward.Id,
-                Period = rewardResult.Period,
                 RegistrationInformation = registrationInformation
             });
 
