@@ -77,7 +77,6 @@ message BoughtLotteriesInformation {
 message TakeRewardInput {
     int64 lottery_id = 1;
     string registration_information = 2;
-    int64 period = 3;
 }
 
 message DrawInput {
