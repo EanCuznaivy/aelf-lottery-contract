@@ -4,6 +4,7 @@ import "aelf/core.proto";
 import "aelf/options.proto";
 import "google/protobuf/empty.proto";
 import "google/protobuf/wrappers.proto";
+import "google/protobuf/timestamp.proto";
 
 option csharp_namespace = "AElf.Contracts.LotteryContract";
 
@@ -21,13 +22,21 @@ service LotteryContract {
 	}
     rpc TakeReward (TakeRewardInput) returns (google.protobuf.Empty) {
     }
-    
+    rpc ContributeFinalReward (google.protobuf.Int64Value) returns (google.protobuf.Empty) {
+    }
+    rpc DistributeFinalReward (google.protobuf.Empty) returns (google.protobuf.Empty) {
+    }
+
     // Management Actions
     rpc ResetMaximumBuyAmount (google.protobuf.Int64Value) returns (google.protobuf.Empty) {
     }
     rpc ResetPrice (google.protobuf.Int64Value) returns (google.protobuf.Empty) {
     }
     rpc ResetDrawingLag (google.protobuf.Int64Value) returns (google.protobuf.Empty) {
+    }
+    rpc AddRewardList (RewardList) returns (google.protobuf.Empty) {
+    }
+    rpc SetRewardListForOnePeriod (RewardsInfo) returns (google.protobuf.Empty) {
     }
 
     rpc GetRewardResult (google.protobuf.Int64Value) returns (GetRewardResultOutput) {
@@ -58,6 +67,12 @@ service LotteryContract {
         option (aelf.is_view) = true;
     }
 	rpc GetLottery (google.protobuf.Int64Value) returns (Lottery) {
+        option (aelf.is_view) = true;
+    }
+	rpc GetRewardList (google.protobuf.Empty) returns (RewardList) {
+        option (aelf.is_view) = true;
+    }
+	rpc GetRewardName (google.protobuf.StringValue) returns (google.protobuf.StringValue) {
         option (aelf.is_view) = true;
     }
 }
@@ -96,6 +111,8 @@ message PeriodBody {
     aelf.Hash random_hash = 3;
     repeated int64 reward_ids = 4;
     int64 start_id = 5;
+    map<string, RewardPeriodInfo> rewards = 6;
+    google.protobuf.Timestamp supposed_draw_date = 7;
 }
 
 message LotteryList {
@@ -120,4 +137,23 @@ message GetBoughtLotteriesInput {
 
 message GetBoughtLotteriesOutput {
     repeated Lottery lotteries = 3;
+}
+
+message RewardList {
+    map<string, string> reward_map = 1;
+}
+
+message RewardsInfo {
+    int64 period = 1;
+    map<string, RewardPeriodInfo> rewards = 2;
+    google.protobuf.Timestamp supposed_draw_date = 3;
+}
+
+message RewardPeriodInfo {
+    int32 level = 1;
+    int32 count = 2;
+}
+
+message StringList {
+    repeated string value = 1;
 }

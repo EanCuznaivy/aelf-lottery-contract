@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using AElf.Contracts.MultiToken;
+using AElf.Contracts.Profit;
 using AElf.CSharp.Core;
 using AElf.Sdk.CSharp;
 using AElf.Types;
@@ -21,6 +22,8 @@ namespace AElf.Contracts.LotteryContract
                 Context.GetContractAddressByName(SmartContractConstants.TokenContractSystemName);
             State.AEDPoSContract.Value =
                 Context.GetContractAddressByName(SmartContractConstants.ConsensusContractSystemName);
+            State.ProfitContract.Value =
+                Context.GetContractAddressByName(SmartContractConstants.ProfitContractSystemName);
 
             State.Price.Value = input.Price == 0 ? DefaultPrice : input.Price;
             State.DrawingLag.Value = input.DrawingLag == 0 ? DefaultDrawingLag : input.DrawingLag;
@@ -34,6 +37,8 @@ namespace AElf.Contracts.LotteryContract
                 BlockNumber = Context.CurrentHeight.Add(State.DrawingLag.Value),
                 RandomHash = Hash.Empty
             };
+
+            CreateFinalRewardProfitScheme();
 
             return new Empty();
         }
@@ -106,12 +111,7 @@ namespace AElf.Contracts.LotteryContract
             State.CurrentPeriod.Value = State.CurrentPeriod.Value.Add(1);
 
             // 初始化下一届基本信息
-            State.Periods[State.CurrentPeriod.Value] = new PeriodBody
-            {
-                StartId = State.SelfIncreasingIdForLottery.Value,
-                BlockNumber = Context.CurrentHeight.Add(State.DrawingLag.Value),
-                RandomHash = Hash.Empty
-            };
+            InitialNextPeriod();
 
             return new Empty();
         }
@@ -143,7 +143,8 @@ namespace AElf.Contracts.LotteryContract
             {
                 throw new AssertionException("Lottery id not found.");
             }
-            Assert(lottery.Owner == Context.Sender,  "只能领取宁亲自买的彩票 :)");
+
+            Assert(lottery.Owner == Context.Sender, "只能领取宁亲自买的彩票 :)");
             Assert(lottery.Level != 0, "宁没有中奖嗷 :(");
             Assert(string.IsNullOrEmpty(lottery.RegistrationInformation),
                 $"宁已经领取过啦！登记信息：{State.Lotteries[input.LotteryId].RegistrationInformation}");
@@ -152,6 +153,77 @@ namespace AElf.Contracts.LotteryContract
 
             // Distribute the reward now. Maybe transfer some tokens.
 
+            return new Empty();
+        }
+
+        public override Empty AddRewardList(RewardList input)
+        {
+            AssertSenderIsAdmin();
+            foreach (var map in input.RewardMap)
+            {
+                State.RewardMap[map.Key] = map.Value;
+            }
+
+            if (State.RewardCodeList.Value == null)
+            {
+                State.RewardCodeList.Value = new StringList {Value = {input.RewardMap.Keys}};
+            }
+            else
+            {
+                State.RewardCodeList.Value.Value.AddRange(input.RewardMap.Keys);
+            }
+
+            return new Empty();
+        }
+
+        public override Empty SetRewardListForOnePeriod(RewardsInfo input)
+        {
+            AssertSenderIsAdmin();
+            var periodBody = State.Periods[input.Period];
+            if (periodBody == null)
+            {
+                periodBody = new PeriodBody
+                {
+                    Rewards = {input.Rewards},
+                    SupposedDrawDate = input.SupposedDrawDate
+                };
+            }
+            else
+            {
+                periodBody.Rewards.Add(input.Rewards);
+                periodBody.SupposedDrawDate = input.SupposedDrawDate;
+            }
+
+            State.Periods[input.Period] = periodBody;
+            return new Empty();
+        }
+
+        public override Empty ContributeFinalReward(Int64Value input)
+        {
+            State.TokenContract.TransferFrom.Send(new TransferFromInput
+            {
+                From = Context.Sender,
+                To = Context.Self,
+                Amount = input.Value,
+                Symbol = Context.Variables.NativeSymbol
+            });
+            State.ProfitContract.ContributeProfits.Send(new ContributeProfitsInput
+            {
+                Symbol = Context.Variables.NativeSymbol,
+                Amount = input.Value,
+                Period = 1,
+                SchemeId = State.FinalRewardProfitSchemeId.Value
+            });
+            return new Empty();
+        }
+
+        public override Empty DistributeFinalReward(Empty input)
+        {
+            State.ProfitContract.DistributeProfits.Send(new DistributeProfitsInput
+            {
+                Period = 1,
+                SchemeId = State.FinalRewardProfitSchemeId.Value
+            });
             return new Empty();
         }
 

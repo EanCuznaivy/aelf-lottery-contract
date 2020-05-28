@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using AElf.Contracts.Profit;
 using AElf.CSharp.Core;
 using AElf.Types;
 
@@ -11,6 +12,41 @@ namespace AElf.Contracts.LotteryContract
         private void AssertSenderIsAdmin()
         {
             Assert(Context.Sender == State.Admin.Value, "Sender should be admin.");
+        }
+
+        private void CreateFinalRewardProfitScheme()
+        {
+            State.ProfitContract.CreateScheme.Send(new CreateSchemeInput
+            {
+                Token = Context.TransactionId,
+                Manager = Context.Self,
+                IsReleaseAllBalanceEveryTimeByDefault = true,
+                CanRemoveBeneficiaryDirectly = true
+            });
+            State.FinalRewardProfitSchemeId.Value =
+                Context.GenerateId(State.ProfitContract.Value, Context.TransactionId);
+        }
+
+        private void InitialNextPeriod()
+        {
+            var periodBody = State.Periods[State.CurrentPeriod.Value];
+            if (periodBody == null)
+            {
+                periodBody = new PeriodBody
+                {
+                    StartId = State.SelfIncreasingIdForLottery.Value,
+                    BlockNumber = Context.CurrentHeight.Add(State.DrawingLag.Value),
+                    RandomHash = Hash.Empty
+                };
+            }
+            else
+            {
+                periodBody.StartId = State.SelfIncreasingIdForLottery.Value;
+                periodBody.BlockNumber = Context.CurrentHeight.Add(State.DrawingLag.Value);
+                periodBody.RandomHash = Hash.Empty;
+            }
+
+            State.Periods[State.CurrentPeriod.Value] = periodBody;
         }
 
         private void DealWithLotteries(List<int> levelsCount, Hash randomHash)
