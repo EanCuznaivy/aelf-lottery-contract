@@ -2,7 +2,6 @@ using AElf.Contracts.MultiToken;
 using AElf.Sdk.CSharp.State;
 using AElf.Types;
 using AElf.Contracts.Consensus.AEDPoS;
-using AElf.Contracts.Profit;
 
 namespace AElf.Contracts.LotteryContract
 {
@@ -11,7 +10,6 @@ namespace AElf.Contracts.LotteryContract
         // ReSharper disable once InconsistentNaming
         internal AEDPoSContractContainer.AEDPoSContractReferenceState AEDPoSContract { get; set; }
         internal TokenContractImplContainer.TokenContractImplReferenceState TokenContract { get; set; }
-        internal ProfitContractContainer.ProfitContractReferenceState ProfitContract { get; set; }
 
         /// <summary>
         /// 该合约中，用户购买所支持的Token Symbol
@@ -67,8 +65,8 @@ namespace AElf.Contracts.LotteryContract
 
         public MappedState<string, string> RewardMap { get; set; }
 
-        public SingletonState<Hash> FinalRewardProfitSchemeId { get; set; }
-
         public SingletonState<StringList> RewardCodeList { get; set; }
+
+        public MappedState<Address, long> BoughtLotteriesCount { get; set; }
     }
 }

@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using AElf.Contracts.MultiToken;
-using AElf.Contracts.Profit;
 using AElf.CSharp.Core;
 using AElf.Sdk.CSharp;
 using AElf.Types;
@@ -22,8 +21,6 @@ namespace AElf.Contracts.LotteryContract
                 Context.GetContractAddressByName(SmartContractConstants.TokenContractSystemName);
             State.AEDPoSContract.Value =
                 Context.GetContractAddressByName(SmartContractConstants.ConsensusContractSystemName);
-            State.ProfitContract.Value =
-                Context.GetContractAddressByName(SmartContractConstants.ProfitContractSystemName);
 
             State.Price.Value = input.Price == 0 ? DefaultPrice : input.Price;
             State.DrawingLag.Value = input.DrawingLag == 0 ? DefaultDrawingLag : input.DrawingLag;
@@ -37,8 +34,6 @@ namespace AElf.Contracts.LotteryContract
                 BlockNumber = Context.CurrentHeight.Add(State.DrawingLag.Value),
                 RandomHash = Hash.Empty
             };
-
-            CreateFinalRewardProfitScheme();
 
             return new Empty();
         }
@@ -54,6 +49,8 @@ namespace AElf.Contracts.LotteryContract
             {
                 State.OwnerToLotteries[Context.Sender][currentPeriod] = new LotteryList();
             }
+
+            State.BoughtLotteriesCount[Context.Sender] = State.BoughtLotteriesCount[Context.Sender].Add(input.Value);
 
             // 转账到本合约（需要Sender事先调用Token合约的Approve方法进行额度授权）
             var amount = State.Price.Value.Mul(input.Value);
@@ -122,7 +119,12 @@ namespace AElf.Contracts.LotteryContract
             Assert(currentPeriod > 1, "Not ready to draw.");
             Assert(Context.Sender == State.Admin.Value, "No permission to draw!");
             Assert(State.Periods[currentPeriod.Sub(1)].RandomHash == Hash.Empty, "Latest period already drawn.");
-            var expectedBlockNumber = State.Periods[State.CurrentPeriod.Value].BlockNumber;
+            var periodBody = State.Periods[State.CurrentPeriod.Value];
+            Assert(
+                periodBody.SupposedDrawDate == null || periodBody.SupposedDrawDate.ToDateTime().DayOfYear >=
+                Context.CurrentBlockTime.ToDateTime().DayOfYear,
+                "Invalid draw date.");
+            var expectedBlockNumber = periodBody.BlockNumber;
             Assert(Context.CurrentHeight >= expectedBlockNumber, "Block height not enough.");
 
             var randomHash = State.AEDPoSContract.GetRandomHash.Call(new Int64Value
@@ -195,35 +197,6 @@ namespace AElf.Contracts.LotteryContract
             }
 
             State.Periods[input.Period] = periodBody;
-            return new Empty();
-        }
-
-        public override Empty ContributeFinalReward(Int64Value input)
-        {
-            State.TokenContract.TransferFrom.Send(new TransferFromInput
-            {
-                From = Context.Sender,
-                To = Context.Self,
-                Amount = input.Value,
-                Symbol = Context.Variables.NativeSymbol
-            });
-            State.ProfitContract.ContributeProfits.Send(new ContributeProfitsInput
-            {
-                Symbol = Context.Variables.NativeSymbol,
-                Amount = input.Value,
-                Period = 1,
-                SchemeId = State.FinalRewardProfitSchemeId.Value
-            });
-            return new Empty();
-        }
-
-        public override Empty DistributeFinalReward(Empty input)
-        {
-            State.ProfitContract.DistributeProfits.Send(new DistributeProfitsInput
-            {
-                Period = 1,
-                SchemeId = State.FinalRewardProfitSchemeId.Value
-            });
             return new Empty();
         }
 

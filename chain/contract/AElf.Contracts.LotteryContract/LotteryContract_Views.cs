@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using AElf.CSharp.Core;
+using AElf.Types;
 using Google.Protobuf.WellKnownTypes;
 
 namespace AElf.Contracts.LotteryContract
@@ -147,6 +148,11 @@ namespace AElf.Contracts.LotteryContract
         public override StringValue GetRewardName(StringValue input)
         {
             return new StringValue {Value = State.RewardMap[input.Value]};
+        }
+
+        public override Int64Value GetBoughtLotteriesCount(Address input)
+        {
+            return new Int64Value {Value = State.BoughtLotteriesCount[input]};
         }
     }
 }

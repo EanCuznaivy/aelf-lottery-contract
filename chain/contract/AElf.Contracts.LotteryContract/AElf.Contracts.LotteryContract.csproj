@@ -30,9 +30,6 @@
         <ContractReference Include="..\..\protobuf\transaction_fee.proto">
             <Link>Protobuf\Proto\reference\transaction_fee.proto</Link>
         </ContractReference>
-        <ContractReference Include="..\..\protobuf\profit_contract.proto">
-            <Link>Protobuf\Proto\reference\profit_contract.proto</Link>
-        </ContractReference>
     </ItemGroup>
 
     <ItemGroup>
