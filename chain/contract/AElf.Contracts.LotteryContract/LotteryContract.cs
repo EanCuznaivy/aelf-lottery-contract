@@ -71,7 +71,6 @@ namespace AElf.Contracts.LotteryContract
                 {
                     Id = selfIncreasingId,
                     Owner = Context.Sender,
-                    Level = 0,
                     Block = Context.CurrentHeight,
                 };
                 State.Lotteries[selfIncreasingId] = lottery;
@@ -103,7 +102,7 @@ namespace AElf.Contracts.LotteryContract
                     $"Period {State.CurrentPeriod.Value} hasn't drew.");
             }
 
-            Assert(State.SelfIncreasingIdForLottery.Value > State.RewardCount.Value.Add(1), "目前所有已售出彩票都中奖了");
+            Assert(State.SelfIncreasingIdForLottery.Value > State.RewardCount.Value.Add(1), "Unable to terminate this period.");
 
             State.CurrentPeriod.Value = State.CurrentPeriod.Value.Add(1);
 
@@ -113,7 +112,7 @@ namespace AElf.Contracts.LotteryContract
             return new Empty();
         }
 
-        public override Empty Draw(DrawInput input)
+        public override Empty Draw(Int64Value input)
         {
             var currentPeriod = State.CurrentPeriod.Value;
             Assert(currentPeriod > 1, "Not ready to draw.");
@@ -132,8 +131,14 @@ namespace AElf.Contracts.LotteryContract
                 Value = expectedBlockNumber
             });
 
+            var rewards = State.Periods[input.Value];
+            if (rewards == null || !rewards.Rewards.Any())
+            {
+                throw new AssertionException("Incorrect period body.");
+            }
+
             // Deal with lotteries base on the random hash.
-            DealWithLotteries(input.LevelsCount.ToList(), randomHash);
+            DealWithLotteries(rewards.Rewards.ToDictionary(r => r.Key, r => r.Value), randomHash);
 
             return new Empty();
         }
@@ -147,7 +152,7 @@ namespace AElf.Contracts.LotteryContract
             }
 
             Assert(lottery.Owner == Context.Sender, "只能领取宁亲自买的彩票 :)");
-            Assert(lottery.Level != 0, "宁没有中奖嗷 :(");
+            Assert(!string.IsNullOrEmpty(lottery.RewardName), "宁没有中奖嗷 :(");
             Assert(string.IsNullOrEmpty(lottery.RegistrationInformation),
                 $"宁已经领取过啦！登记信息：{State.Lotteries[input.LotteryId].RegistrationInformation}");
 
