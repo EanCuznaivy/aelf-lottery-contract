@@ -119,20 +119,22 @@ namespace AElf.Contracts.LotteryContract
         {
             AssertIsNotSuspended();
             var currentPeriod = State.CurrentPeriod.Value;
-            Assert(input.Value == currentPeriod, "Incorrect period.");
+            var previousPeriodBody = State.Periods[currentPeriod.Sub(1)];
+            var currentPeriodBody = State.Periods[currentPeriod];
+
+            Assert(input.Value.Add(1) == currentPeriod, "Incorrect period.");
             Assert(currentPeriod > 1, "Not ready to draw.");
             Assert(Context.Sender == State.Admin.Value, "No permission to draw!");
-            Assert(State.Periods[currentPeriod.Sub(1)].RandomHash == Hash.Empty, "Latest period already drawn.");
-            var periodBody = State.Periods[currentPeriod];
+            Assert(previousPeriodBody.RandomHash == Hash.Empty, "Latest period already drawn.");
             Assert(
-                periodBody.SupposedDrawDate == null || periodBody.SupposedDrawDate.ToDateTime().DayOfYear >=
+                previousPeriodBody.SupposedDrawDate == null || previousPeriodBody.SupposedDrawDate.ToDateTime().DayOfYear >=
                 Context.CurrentBlockTime.ToDateTime().DayOfYear,
                 "Invalid draw date.");
 
-            var expectedBlockNumber = periodBody.BlockNumber;
+            var expectedBlockNumber = currentPeriodBody.BlockNumber;
             Assert(Context.CurrentHeight >= expectedBlockNumber, "Block height not enough.");
 
-            if (periodBody == null || !periodBody.Rewards.Any())
+            if (previousPeriodBody.Rewards == null || !previousPeriodBody.Rewards.Any())
             {
                 throw new AssertionException("Reward list is empty.");
             }
@@ -143,7 +145,7 @@ namespace AElf.Contracts.LotteryContract
             });
 
             // Deal with lotteries base on the random hash.
-            DealWithLotteries(periodBody.Rewards.ToDictionary(r => r.Key, r => r.Value), randomHash);
+            DealWithLotteries(previousPeriodBody.Rewards.ToDictionary(r => r.Key, r => r.Value), randomHash);
 
             return new Empty();
         }
