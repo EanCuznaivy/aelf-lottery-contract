@@ -127,7 +127,8 @@ namespace AElf.Contracts.LotteryContract
             Assert(Context.Sender == State.Admin.Value, "No permission to draw!");
             Assert(previousPeriodBody.RandomHash == Hash.Empty, "Latest period already drawn.");
             Assert(
-                previousPeriodBody.SupposedDrawDate == null || previousPeriodBody.SupposedDrawDate.ToDateTime().DayOfYear >=
+                previousPeriodBody.SupposedDrawDate == null ||
+                previousPeriodBody.SupposedDrawDate.ToDateTime().DayOfYear >=
                 Context.CurrentBlockTime.ToDateTime().DayOfYear,
                 "Invalid draw date.");
 
@@ -203,9 +204,14 @@ namespace AElf.Contracts.LotteryContract
                     Rewards = {input.Rewards},
                     SupposedDrawDate = input.SupposedDrawDate
                 };
+                State.AllRewardsCount.Value = State.AllRewardsCount.Value.Add(input.Rewards.Values.Sum());
             }
             else
             {
+                var count = State.AllRewardsCount.Value;
+                count = count.Sub(periodBody.Rewards.Values.Sum());
+                count = count.Add(input.Rewards.Values.Sum());
+                State.AllRewardsCount.Value = count;
                 periodBody.Rewards.Clear();
                 periodBody.Rewards.Add(input.Rewards);
                 periodBody.SupposedDrawDate = input.SupposedDrawDate;

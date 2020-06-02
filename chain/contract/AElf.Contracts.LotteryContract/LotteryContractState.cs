@@ -70,5 +70,7 @@ namespace AElf.Contracts.LotteryContract
         public MappedState<Address, long> BoughtLotteriesCount { get; set; }
 
         public BoolState IsSuspend { get; set; }
+
+        public Int64State AllRewardsCount { get; set; }
     }
 }
