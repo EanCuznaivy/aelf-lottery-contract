@@ -119,10 +119,11 @@ namespace AElf.Contracts.LotteryContract
         {
             AssertIsNotSuspended();
             var currentPeriod = State.CurrentPeriod.Value;
+            Assert(input.Value == currentPeriod, "Incorrect period.");
             Assert(currentPeriod > 1, "Not ready to draw.");
             Assert(Context.Sender == State.Admin.Value, "No permission to draw!");
             Assert(State.Periods[currentPeriod.Sub(1)].RandomHash == Hash.Empty, "Latest period already drawn.");
-            var periodBody = State.Periods[State.CurrentPeriod.Value];
+            var periodBody = State.Periods[currentPeriod];
             Assert(
                 periodBody.SupposedDrawDate == null || periodBody.SupposedDrawDate.ToDateTime().DayOfYear >=
                 Context.CurrentBlockTime.ToDateTime().DayOfYear,
@@ -131,8 +132,7 @@ namespace AElf.Contracts.LotteryContract
             var expectedBlockNumber = periodBody.BlockNumber;
             Assert(Context.CurrentHeight >= expectedBlockNumber, "Block height not enough.");
 
-            var rewards = State.Periods[input.Value];
-            if (rewards == null || !rewards.Rewards.Any())
+            if (periodBody == null || !periodBody.Rewards.Any())
             {
                 throw new AssertionException("Reward list is empty.");
             }
@@ -143,7 +143,7 @@ namespace AElf.Contracts.LotteryContract
             });
 
             // Deal with lotteries base on the random hash.
-            DealWithLotteries(rewards.Rewards.ToDictionary(r => r.Key, r => r.Value), randomHash);
+            DealWithLotteries(periodBody.Rewards.ToDictionary(r => r.Key, r => r.Value), randomHash);
 
             return new Empty();
         }
@@ -193,6 +193,7 @@ namespace AElf.Contracts.LotteryContract
         {
             AssertSenderIsAdmin();
             var periodBody = State.Periods[input.Period];
+            Assert(periodBody.RandomHash == Hash.Empty, "This period already terminated.");
             if (periodBody == null)
             {
                 periodBody = new PeriodBody
