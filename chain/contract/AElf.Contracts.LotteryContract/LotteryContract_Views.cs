@@ -157,7 +157,7 @@ namespace AElf.Contracts.LotteryContract
 
         public override Int64Value GetAllLotteriesCount(Empty input)
         {
-            return new Int64Value {Value = State.SelfIncreasingIdForLottery.Value};
+            return new Int64Value {Value = State.SelfIncreasingIdForLottery.Value.Sub(1)};
         }
     }
 }
