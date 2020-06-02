@@ -34,6 +34,10 @@ service LotteryContract {
     }
     rpc SetRewardListForOnePeriod (RewardsInfo) returns (google.protobuf.Empty) {
     }
+    rpc Suspend (google.protobuf.Empty) returns (google.protobuf.Empty) {
+    }
+    rpc Recover (google.protobuf.Empty) returns (google.protobuf.Empty) {
+    }
 
     rpc GetRewardResult (google.protobuf.Int64Value) returns (GetRewardResultOutput) {
         option (aelf.is_view) = true;

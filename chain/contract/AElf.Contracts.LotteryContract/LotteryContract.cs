@@ -40,6 +40,7 @@ namespace AElf.Contracts.LotteryContract
 
         public override BoughtLotteriesInformation Buy(Int64Value input)
         {
+            AssertIsNotSuspended();
             Assert(input.Value < State.MaximumAmount.Value, $"单次购买数量不能超过{State.MaximumAmount.Value} :)");
             Assert(input.Value > 0, "单次购买数量不能低于1");
 
@@ -93,6 +94,7 @@ namespace AElf.Contracts.LotteryContract
 
         public override Empty PrepareDraw(Empty input)
         {
+            AssertIsNotSuspended();
             Assert(Context.Sender == State.Admin.Value, "No permission to prepare!");
 
             // Check whether current period drew except period 1.
@@ -102,7 +104,8 @@ namespace AElf.Contracts.LotteryContract
                     $"Period {State.CurrentPeriod.Value} hasn't drew.");
             }
 
-            Assert(State.SelfIncreasingIdForLottery.Value > State.RewardCount.Value.Add(1), "Unable to terminate this period.");
+            Assert(State.SelfIncreasingIdForLottery.Value > State.RewardCount.Value.Add(1),
+                "Unable to terminate this period.");
 
             State.CurrentPeriod.Value = State.CurrentPeriod.Value.Add(1);
 
@@ -114,6 +117,7 @@ namespace AElf.Contracts.LotteryContract
 
         public override Empty Draw(Int64Value input)
         {
+            AssertIsNotSuspended();
             var currentPeriod = State.CurrentPeriod.Value;
             Assert(currentPeriod > 1, "Not ready to draw.");
             Assert(Context.Sender == State.Admin.Value, "No permission to draw!");
@@ -123,19 +127,20 @@ namespace AElf.Contracts.LotteryContract
                 periodBody.SupposedDrawDate == null || periodBody.SupposedDrawDate.ToDateTime().DayOfYear >=
                 Context.CurrentBlockTime.ToDateTime().DayOfYear,
                 "Invalid draw date.");
+
             var expectedBlockNumber = periodBody.BlockNumber;
             Assert(Context.CurrentHeight >= expectedBlockNumber, "Block height not enough.");
+
+            var rewards = State.Periods[input.Value];
+            if (rewards == null || !rewards.Rewards.Any())
+            {
+                throw new AssertionException("Reward list is empty.");
+            }
 
             var randomHash = State.AEDPoSContract.GetRandomHash.Call(new Int64Value
             {
                 Value = expectedBlockNumber
             });
-
-            var rewards = State.Periods[input.Value];
-            if (rewards == null || !rewards.Rewards.Any())
-            {
-                throw new AssertionException("Incorrect period body.");
-            }
 
             // Deal with lotteries base on the random hash.
             DealWithLotteries(rewards.Rewards.ToDictionary(r => r.Key, r => r.Value), randomHash);
@@ -145,6 +150,7 @@ namespace AElf.Contracts.LotteryContract
 
         public override Empty TakeReward(TakeRewardInput input)
         {
+            AssertIsNotSuspended();
             var lottery = State.Lotteries[input.LotteryId];
             if (lottery == null)
             {
@@ -197,6 +203,7 @@ namespace AElf.Contracts.LotteryContract
             }
             else
             {
+                periodBody.Rewards.Clear();
                 periodBody.Rewards.Add(input.Rewards);
                 periodBody.SupposedDrawDate = input.SupposedDrawDate;
             }
@@ -223,6 +230,20 @@ namespace AElf.Contracts.LotteryContract
         {
             AssertSenderIsAdmin();
             State.MaximumAmount.Value = input.Value;
+            return new Empty();
+        }
+
+        public override Empty Suspend(Empty input)
+        {
+            AssertSenderIsAdmin();
+            State.IsSuspend.Value = true;
+            return new Empty();
+        }
+
+        public override Empty Recover(Empty input)
+        {
+            AssertSenderIsAdmin();
+            State.IsSuspend.Value = false;
             return new Empty();
         }
     }

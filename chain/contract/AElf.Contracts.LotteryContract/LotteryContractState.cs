@@ -68,5 +68,7 @@ namespace AElf.Contracts.LotteryContract
         public SingletonState<StringList> RewardCodeList { get; set; }
 
         public MappedState<Address, long> BoughtLotteriesCount { get; set; }
+
+        public BoolState IsSuspend { get; set; }
     }
 }

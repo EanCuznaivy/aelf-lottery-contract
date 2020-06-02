@@ -91,5 +91,10 @@ namespace AElf.Contracts.LotteryContract
         {
             return State.RewardMap[rewardCode] ?? rewardCode;
         }
+
+        private void AssertIsNotSuspended()
+        {
+            Assert(!State.IsSuspend.Value, "Cannot do anything.");
+        }
     }
 }
