@@ -84,6 +84,7 @@ namespace AElf.Contracts.LotteryContract
             }
 
             period.RewardIds.Add(rewardIds);
+            period.ActualDrawDate = Context.CurrentBlockTime;
             State.Periods[previousPeriodNumber] = period;
         }
 

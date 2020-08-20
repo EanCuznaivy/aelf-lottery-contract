@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AElf.Contracts.MultiToken;
+using AElf.Kernel.Consensus.Application;
 using AElf.Types;
 using Google.Protobuf.Collections;
 using Google.Protobuf.WellKnownTypes;
@@ -144,7 +145,12 @@ namespace AElf.Contracts.LotteryContract
                 }
             });
 
+            // Set a fixed block time.
             await LotteryContractStub.Draw.SendAsync(new Int64Value {Value = 1});
+
+            // Check actual draw time
+            var periodBody = await LotteryContractStub.GetPeriod.CallAsync(new Int64Value {Value = 1});
+            periodBody.ActualDrawDate.ShouldNotBeNull();
 
             var rewardResult = await LotteryContractStub.GetRewardResult.CallAsync(new Int64Value
             {
